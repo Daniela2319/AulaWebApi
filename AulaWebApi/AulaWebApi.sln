@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AulaWebApi.WebApi", "AulaWebApi.WebApi\AulaWebApi.WebApi.csproj", "{A8455E5F-293D-4055-8FAA-265204B87F1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AulaWebApi.Models", "AulaWebApi.Models\AulaWebApi.Models.csproj", "{1B02C8EF-C1F9-4868-B110-569AB8D8D7A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A8455E5F-293D-4055-8FAA-265204B87F1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8455E5F-293D-4055-8FAA-265204B87F1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8455E5F-293D-4055-8FAA-265204B87F1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B02C8EF-C1F9-4868-B110-569AB8D8D7A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B02C8EF-C1F9-4868-B110-569AB8D8D7A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B02C8EF-C1F9-4868-B110-569AB8D8D7A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B02C8EF-C1F9-4868-B110-569AB8D8D7A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
