@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace AulaWebApi.Models
 {
-    internal class Person
+    public class Person : BaseModel
     {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = String.Empty;
+        public DateTime BirthDate { get; set; } 
+
+        public override string ToString()
+        {
+            return $"{base.ToString()} - {this.FirstName} - {this.LastName} - ({this.BirthDate.ToShortDateString()})";
+        }
     }
 }
