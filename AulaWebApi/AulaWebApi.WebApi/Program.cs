@@ -1,3 +1,7 @@
+using AulaWebApi.Data;
+using AulaWebApi.Models;
+using AulaWebApi.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +10,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+// Registra o serviço PersonService
+builder.Services.AddScoped<PersonService>();
+builder.Services.AddScoped<DatabaseConfig>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -17,6 +25,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader();  // permite qualquer header
     });
 });
+
 
 
 var app = builder.Build();

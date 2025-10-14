@@ -1,4 +1,5 @@
-﻿using AulaWebApi.Models;
+﻿using AulaWebApi.Data;
+using AulaWebApi.Models;
 using AulaWebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,12 @@ namespace AulaWebApi.WebApi.Controllers
     [ApiController]
     public class PersonController : ControllerBase
     {
-        private PersonService _service = new PersonService();
+        private readonly PersonService _service;
+
+        public PersonController(PersonService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
         public List<Person> Get()
