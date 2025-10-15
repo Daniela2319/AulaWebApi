@@ -34,23 +34,21 @@ namespace AulaWebApi.Services
             {
                 command.Parameters.AddWithValue(param.Key, param.Value);
             }
-
             command.ExecuteNonQuery();
         }
 
-        //método para executar SELECT, BYID e retornar
+        //método para executar SELECT e retornar
         public NpgsqlDataReader ExecuteReader(string sql, Dictionary<string, object>? parameters = null)
         {
              var connection = GetConnection();
              var command = new NpgsqlCommand(sql, connection);
              if (parameters != null)
-            {
+             {
                 foreach (var param in parameters)
                 {
                     command.Parameters.AddWithValue(param.Key, param.Value);
                 }
-            }
-
+             }
              return command.ExecuteReader(CommandBehavior.CloseConnection);
             
         }

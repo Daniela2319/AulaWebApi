@@ -34,8 +34,7 @@ namespace AulaWebApi.Data
             if ( _connection.State != ConnectionState.Closed )
                 _connection.Close();
         }
-
-       
+     
 
         //libera recurso da conexão
         public void Dispose()

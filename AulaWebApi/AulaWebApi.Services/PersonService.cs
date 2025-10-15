@@ -18,22 +18,10 @@ namespace AulaWebApi.Services
         {
             string commandText = SqlQuery.SelectAll(TableName);
 
-            var dataReader = ExecuteReader(commandText);
+            using var dataReader = ExecuteReader(commandText);
 
-            List<Person> list = new List<Person>();
-            while (dataReader.Read())
-            {
-                Person person = new Person();
-                person.Id = Convert.ToInt32(dataReader["id"]);
-                person.FirstName = dataReader["first_name"].ToString();
-                person.LastName = dataReader["last_name"].ToString();
-                person.BirthDate = Convert.ToDateTime(dataReader["birth_date"]);
-                person.CreatedAt = Convert.ToDateTime(dataReader["created_at"]);
+            return PersonList(dataReader);
 
-                list.Add(person);
-            }
-            return list;
-            
         }
 
         public override Person ReadById(int id)
@@ -41,19 +29,9 @@ namespace AulaWebApi.Services
             string commandText = SqlQuery.SelectById(TableName);
             var parameters = new Dictionary<string, object>() { {  "id", id } };
             
-            var dataReader = ExecuteReader(commandText, parameters);
+            using var dataReader = ExecuteReader(commandText, parameters);
 
-            Person person = new Person();
-            if (dataReader.Read())
-            {
-                person.Id = Convert.ToInt32(dataReader["id"]);
-                person.FirstName = dataReader["first_name"].ToString();
-                person.LastName = dataReader["last_name"].ToString();
-                person.BirthDate = Convert.ToDateTime(dataReader["birth_date"]);
-                person.CreatedAt = Convert.ToDateTime(dataReader["created_at"]);
-
-            }
-            return person;
+            return PersonList(dataReader).FirstOrDefault();
 
         }
         public override void Create(Person model)
@@ -91,6 +69,28 @@ namespace AulaWebApi.Services
             string commandText = SqlQuery.Delete(TableName);
             var parameters = new Dictionary<string, object> { { "id", id } };
             ExecuteNonQuery(commandText, parameters);   
+        }
+
+        //metodo auxiliares
+        private List<Person> PersonList(NpgsqlDataReader dataReader)
+        {
+            var list = new List<Person>();
+
+            while (dataReader.Read())
+            {
+                var person = new Person
+                {
+                    Id = Convert.ToInt32(dataReader["id"]),
+                    FirstName = dataReader["first_name"].ToString(),
+                    LastName = dataReader["last_name"].ToString(),
+                    BirthDate = Convert.ToDateTime(dataReader["birth_date"]),
+                    CreatedAt = Convert.ToDateTime(dataReader["created_at"])
+                };
+
+                list.Add(person);
+            }
+
+            return list;
         }
     }
 }
