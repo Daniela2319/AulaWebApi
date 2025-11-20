@@ -10,15 +10,15 @@ using Npgsql;
 namespace AulaWebApi.Services
 {
     public class PersonService : BaseService<Person>
-    {   
-        
+    {
+        private static readonly string[] columns = new[] { "first_name", "last_name", "birth_date", "created_at" };
         public PersonService(DatabaseConfig config) :base("person", config){}
 
         public override List<Person> Read()
         {
             string commandText = SqlQuery.SelectAll(TableName);
 
-            using var dataReader = ExecuteReader(commandText);
+            var dataReader = ExecuteReader(commandText);
 
             return PersonList(dataReader);
 
@@ -29,14 +29,16 @@ namespace AulaWebApi.Services
             string commandText = SqlQuery.SelectById(TableName);
             var parameters = new Dictionary<string, object>() { {  "id", id } };
             
-            using var dataReader = ExecuteReader(commandText, parameters);
+            var dataReader = ExecuteReader(commandText, parameters);
 
             return PersonList(dataReader).FirstOrDefault();
 
         }
+        
+
         public override void Create(Person model)
         {
-            string commandText = SqlQuery.Insert(TableName, new[] { "first_name", "last_name", "birth_date", "created_at" });
+            string commandText = SqlQuery.Insert(TableName, columns);
             var parameters = new Dictionary<string, object>
             {
                 { "first_name", model.FirstName },
@@ -51,7 +53,7 @@ namespace AulaWebApi.Services
 
         public override void Update(Person model)
         {
-            string commandText = SqlQuery.Update(TableName, new[] { "first_name", "last_name", "birth_date", "created_at" } );
+            string commandText = SqlQuery.Update(TableName, columns );
             var parameters = new Dictionary<string, object>
             {
                 { "first_name", model.FirstName },
