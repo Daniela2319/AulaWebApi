@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AulaWebApi.Data\AulaWebApi.Infra.csproj" />
     <ProjectReference Include="..\AulaWebApi.Models\AulaWebApi.Models.csproj" />
   </ItemGroup>
 
