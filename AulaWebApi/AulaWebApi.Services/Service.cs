@@ -31,7 +31,6 @@ namespace AulaWebApi.Services
             _repository.Delete(id);
         }
 
-
         public bool Exists(int id)
         {
             return _repository.Exists(id);

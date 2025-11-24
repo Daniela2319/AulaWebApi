@@ -1,0 +1,307 @@
+# .gitlab-ci.yml - .NET 10 pipeline (assume solution in Zuplae/)
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    - when: never
+
+stages:
+  - install
+  - quality-gate
+  - build
+  - git-automation
+
+# -----------------------------
+# Global vars
+# -----------------------------
+variables:
+  DOTNET_ROOT_DIR: "Zuplae"
+  GITLAB_API_URL: "https://gitlab.com/api/v4"
+  SECRET_DETECTION_ENABLED: "true"
+
+# -----------------------------
+# Default runner settings (generic)
+# -----------------------------
+default:
+  before_script:
+    - 'echo "Job started: $CI_JOB_NAME"'
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .nuget/packages
+
+# -----------------------------
+# INSTALL (restore)
+# -----------------------------
+install:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: install
+  before_script:
+    - dotnet --info
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - dotnet restore
+  artifacts:
+    paths:
+      - .nuget/packages
+    expire_in: 1h
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+
+# -----------------------------
+# QUALITY GATE
+# -----------------------------
+commitlint:
+  image: alpine:3.18
+  stage: quality-gate
+  needs:
+    - job: install
+      artifacts: true
+  before_script:
+    - apk add --no-cache git
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  script:
+    - |
+      set -euo pipefail
+      if [ -n "${CI_MERGE_REQUEST_IID:-}" ]; then
+        FROM="${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+        TO="${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
+      else
+        FROM="${CI_COMMIT_BEFORE_SHA:-}"
+        TO="${CI_COMMIT_SHA:-}"
+      fi
+      if [ -z "${TO}" ] || [ "${TO}" = "0000000000000000000000000000000000000000" ]; then TO="HEAD"; fi
+      if [ -n "${FROM:-}" ] && ! git rev-parse --verify --quiet "${FROM}" >/dev/null 2>&1; then git fetch --no-tags --depth=1 origin "${FROM}" || true; fi
+      if [ -z "${FROM:-}" ] || [ "${FROM}" = "0000000000000000000000000000000000000000" ] || ! git rev-parse --verify --quiet "${FROM}" >/dev/null 2>&1; then
+        TO_SHA="$(git rev-parse --verify --short "${TO}" 2>/dev/null || echo "")"
+        if [ -n "${TO_SHA}" ]; then FROM="${TO_SHA}^"; else FROM="HEAD^"; TO="HEAD"; fi
+      fi
+      echo "Checking commits from: ${FROM}..${TO}"
+      COMMITS=$(git log --format='%s' "${FROM}".."${TO}" || true)
+      if [ -z "${COMMITS}" ]; then echo "No commits to check."; exit 0; fi
+      PATTERN='^(feat|fix|chore|docs|style|refactor|perf|test|build)(\(.+\))?: .+'
+      failed=0
+      printf '%s\n' "$COMMITS" | while IFS= read -r msg; do
+        [ -z "$msg" ] && continue
+        if echo "$msg" | grep -E "$PATTERN" >/dev/null 2>&1; then echo " OK  $msg"; else echo " ERR $msg"; failed=1; fi
+      done
+      if [ "${failed}" -ne 0 ]; then
+        echo "Commit messages do not follow Conventional Commits."; exit 1
+      fi
+      echo "All commit messages OK."
+
+descriptionlint:
+  image: node:24-alpine
+  stage: quality-gate
+  needs:
+    - job: install
+      artifacts: true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  script:
+    - apk add --no-cache curl jq
+    - |
+      MR_TITLE="${CI_MERGE_REQUEST_TITLE:-}"
+      MR_DESC="${CI_MERGE_REQUEST_DESCRIPTION:-}"
+      if [ -z "${MR_TITLE}" ] || [ -z "${MR_DESC}" ]; then
+        MR=$(curl -s --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "${GITLAB_API_URL}/projects/${CI_PROJECT_ID}/merge_requests/${CI_MERGE_REQUEST_IID}")
+        MR_TITLE=$(echo "$MR" | jq -r '.title // ""')
+        MR_DESC=$(echo "$MR" | jq -r '.description // ""')
+      fi
+      if ! echo "$MR_TITLE" | grep -E '^(feat|fix|chore|docs|style|refactor|perf|test|build)(\(.+\))?: .+' >/dev/null; then
+        echo "ERROR: MR title format invalid"; exit 1
+      fi
+      if [ -z "$MR_DESC" ] || [ "$(echo "$MR_DESC" | tr -d '[:space:]')" = "" ]; then echo "ERROR: MR description empty"; exit 1; fi
+
+format:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: quality-gate
+  before_script:
+    - dotnet --info
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - dotnet format --verify-no-changes
+
+analyze:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: quality-gate
+  needs:
+    - job: install
+      artifacts: true
+  before_script:
+    - dotnet --info
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - dotnet build -warnaserror
+
+test:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: quality-gate
+  needs:
+    - job: install
+      artifacts: true
+  before_script:
+    - dotnet --info
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - dotnet test --no-build --verbosity normal
+  artifacts:
+    when: always
+    paths:
+      - TestResults/
+    expire_in: 1 week
+
+# include secret-detection template
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+secret_detection:
+  stage: quality-gate
+  rules:
+    - if: '$SECRET_DETECTION_ENABLED == "true"'
+      when: on_success
+    - when: never
+
+# -----------------------------
+# BUILD (publish)
+# -----------------------------
+publish:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: build
+  needs:
+    - job: install
+      artifacts: true
+  before_script:
+    - dotnet --info
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - dotnet publish -c Release -o publish
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: on_success
+    - when: never
+
+# -----------------------------
+# GIT-AUTOMATION (merge + deploy placeholders)
+# -----------------------------
+merge_main_to_branch:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: git-automation
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends curl jq git bash && rm -rf /var/lib/apt/lists/*
+    - dotnet --info
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main"'
+      when: on_success
+    - when: never
+  needs:
+    - job: install
+      artifacts: true
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - |
+      set -euo pipefail
+      PROJECT_ID="${CI_PROJECT_ID}"
+      SOURCE_BRANCH="main"
+      TARGET_BRANCH="${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
+      API="${GITLAB_API_URL:-https://gitlab.com/api/v4}"
+      AUTH_HEADER="PRIVATE-TOKEN: ${GITLAB_TOKEN}"
+
+      echo "Merge main → ${TARGET_BRANCH}"
+
+      MR_JSON=$(curl -s --header "$AUTH_HEADER" \
+        "${API}/projects/${PROJECT_ID}/merge_requests?state=opened&source_branch=${SOURCE_BRANCH}&target_branch=${TARGET_BRANCH}")
+      MR_IID=$(echo "$MR_JSON" | jq -r '.[0].iid // empty')
+
+      if [ -n "$MR_IID" ]; then
+        echo "Existing MR found ($MR_IID). Merging..."
+        RESP=$(curl -s -X PUT --header "$AUTH_HEADER" \
+          "${API}/projects/${PROJECT_ID}/merge_requests/${MR_IID}/merge" \
+          -d "merge_commit_message=Merge main into ${TARGET_BRANCH} [ci skip]" || true)
+        echo "$RESP" | jq -C .
+        exit 0
+      fi
+
+      echo "Creating new MR main → ${TARGET_BRANCH}"
+      CREATE=$(curl -s --header "$AUTH_HEADER" -X POST "${API}/projects/${PROJECT_ID}/merge_requests" \
+        -d "source_branch=${SOURCE_BRANCH}" \
+        -d "target_branch=${TARGET_BRANCH}" \
+        -d "title=chore: merge main into ${TARGET_BRANCH}")
+      MR_IID=$(echo "$CREATE" | jq -r '.iid // empty')
+
+      echo "Merging MR $MR_IID..."
+      RESP=$(curl -s -X PUT --header "$AUTH_HEADER" \
+        "${API}/projects/${PROJECT_ID}/merge_requests/${MR_IID}/merge" \
+        -d "merge_commit_message=Merge main into ${TARGET_BRANCH} [ci skip]" || true)
+      echo "$RESP" | jq -C .
+
+merge_and_deploy_to_staging:
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  stage: git-automation
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends curl jq git bash && rm -rf /var/lib/apt/lists/*
+    - dotnet --info
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != "main"'
+      when: manual
+    - when: never
+  needs:
+    - job: install
+      artifacts: true
+  script:
+    - cd "${DOTNET_ROOT_DIR}"
+    - |
+      set -euo pipefail
+      PROJECT_ID="${CI_PROJECT_ID}"
+      SOURCE_BRANCH="${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
+      TARGET_BRANCH="staging"
+      API="${GITLAB_API_URL}"
+      AUTH_HEADER="PRIVATE-TOKEN: ${GITLAB_TOKEN}"
+
+      echo "Promoting ${SOURCE_BRANCH} → staging"
+
+      MR_JSON=$(curl -s --header "$AUTH_HEADER" \
+        "${API}/projects/${PROJECT_ID}/merge_requests?state=opened&source_branch=${SOURCE_BRANCH}&target_branch=${TARGET_BRANCH}")
+      MR_IID=$(echo "$MR_JSON" | jq -r '.[0].iid // empty')
+
+      if [ -z "$MR_IID" ]; then
+        CREATE=$(curl -s --header "$AUTH_HEADER" -X POST "${API}/projects/${PROJECT_ID}/merge_requests" \
+          -d "source_branch=${SOURCE_BRANCH}" \
+          -d "target_branch=${TARGET_BRANCH}" \
+          -d "title=chore: promote ${SOURCE_BRANCH} → staging")
+        MR_IID=$(echo "$CREATE" | jq -r '.iid // empty')
+      fi
+
+      RESP=$(curl -s -X PUT --header "$AUTH_HEADER" \
+        "${API}/projects/${PROJECT_ID}/merge_requests/${MR_IID}/merge" \
+        -d "merge_commit_message=Promote ${SOURCE_BRANCH} to staging [ci skip]" || true)
+      echo "$RESP" | jq -C .
+
+      echo "Deploy to staging placeholder — insert real deployment here."
+  environment:
+    name: staging
+    url: https://staging.example.com
+

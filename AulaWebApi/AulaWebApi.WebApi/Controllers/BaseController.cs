@@ -8,40 +8,40 @@ namespace AulaWebApi.WebApi.Controllers
     [Route("api/[controller]")]
     public class BaseController<T> : ControllerBase where T : BaseModel
     {
-        private IService<T> _service;
+        protected IService<T> _service;
         public BaseController(IService<T> service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public List<T> Get()
+        public virtual List<T> Get()
         {
             return _service.Read();
         }
 
 
         [HttpGet("{id}")]
-        public T Get(int id)
+        public virtual T Get(int id)
         {
             return _service.ReadById(id);
         }
 
         [HttpGet("exist/{id}")]
-        public bool Exist(int id)
+        public virtual bool Exist(int id)
         {
             return _service.Exists(id);
         }
 
         [HttpPost]
-        public void Post([FromBody] T model)
+        public virtual void Post([FromBody] T model)
         {
             _service.Create(model);
         }
 
 
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] T model)
+        public virtual void Put(int id, [FromBody] T model)
         {
             if (id != model.Id)
             {
@@ -52,7 +52,7 @@ namespace AulaWebApi.WebApi.Controllers
 
 
         [HttpDelete("{id}")]
-        public StatusCodeResult Delete(int id)
+        public virtual StatusCodeResult Delete(int id)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace AulaWebApi.WebApi.Controllers
                 StatusCodeResult result = new StatusCodeResult(204);
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StatusCodeResult result = new StatusCodeResult(500);
                 return result;

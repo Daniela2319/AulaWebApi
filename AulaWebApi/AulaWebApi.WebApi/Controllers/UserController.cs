@@ -1,5 +1,6 @@
 ﻿using AulaWebApi.Models;
 using AulaWebApi.Services;
+using AulaWebApi.WebApi.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AulaWebApi.WebApi.Controllers
@@ -8,23 +9,51 @@ namespace AulaWebApi.WebApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private UserService _service;
-        public UserController(UserService service)
+        private IService<User> _service;
+        private IService<Person> _personService;
+        public UserController(IService<User> service, IService<Person> personService)
         {
             _service = service;
+            _personService = personService;
         }
 
         [HttpGet]
-        public List<User> Get()
+        public List<UserViewModel> Get()
         {
-            return _service.Read();
+            List<User> users = _service.Read();
+            List<UserViewModel> listViewModel = new List<UserViewModel>();
+            foreach (var user in users)
+            {
+                UserViewModel userViewModel = new UserViewModel();
+                userViewModel.Id = user.Id;
+                userViewModel.Email = user.Email;
+                userViewModel.Password = user.Password;
+                userViewModel.PersonId = user.PersonId;
+                userViewModel.CreatedAt = user.CreatedAt;
+                userViewModel.Person = _personService.ReadById(user.PersonId);
+                listViewModel.Add(userViewModel);
+            }
+            return listViewModel;
         }
 
+        [HttpGet("exist/{id}")]
+        public bool Exist(int id)
+        {
+            return _service.Exists(id);
+        }
 
         [HttpGet("{id}")]
-        public User Get(int id)
+        public UserViewModel Get(int id)
         {
-            return _service.ReadById(id);
+            User user = _service.ReadById(id);
+            UserViewModel userViewModel = new UserViewModel();
+            userViewModel.Id = user.Id;
+            userViewModel.Email = user.Email;
+            userViewModel.Password = user.Password;
+            userViewModel.PersonId = user.PersonId;
+            userViewModel.CreatedAt = user.CreatedAt;
+            userViewModel.Person = _personService.ReadById(user.PersonId);
+            return userViewModel;
         }
 
 

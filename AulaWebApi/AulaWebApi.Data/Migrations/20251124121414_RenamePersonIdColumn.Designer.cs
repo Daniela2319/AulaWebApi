@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AulaWebApi.Infra.Migrations
 {
     [DbContext(typeof(OrganizerContext))]
-    [Migration("20251120181217_Infra")]
-    partial class Infra
+    [Migration("20251124121414_RenamePersonIdColumn")]
+    partial class RenamePersonIdColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,20 +76,7 @@ namespace AulaWebApi.Infra.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
-
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("AulaWebApi.Models.User", b =>
-                {
-                    b.HasOne("AulaWebApi.Models.Person", "Person")
-                        .WithMany()
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Person");
                 });
 #pragma warning restore 612, 618
         }

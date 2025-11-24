@@ -2,13 +2,12 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-
 #nullable disable
 
 namespace AulaWebApi.Infra.Migrations
 {
     /// <inheritdoc />
-    public partial class Infra : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

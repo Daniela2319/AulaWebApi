@@ -10,6 +10,7 @@ namespace AulaWebApi.Models
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public Person Person { get; set; } // assistir aula deste ponto.
+        public int PersonId { get; set; }
+        
     }
 }

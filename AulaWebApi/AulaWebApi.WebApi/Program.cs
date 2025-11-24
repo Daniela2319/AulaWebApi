@@ -34,7 +34,9 @@ builder.Services.AddDbContext<OrganizerContext>(options =>
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
-builder.Services.AddScoped(typeof(BaseController<>));
+
+
+
 
 
 var app = builder.Build();
