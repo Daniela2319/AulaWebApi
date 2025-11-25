@@ -1,6 +1,5 @@
 ﻿using AulaWebApi.Infra.Context;
 using AulaWebApi.Models;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace AulaWebApi.Infra.Repositories
