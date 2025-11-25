@@ -36,9 +36,12 @@ namespace AulaWebApi.Infra.Repositories
 
         public T ReadById(int id)
         {
-            T item = list.FirstOrDefault(i => i.Id == id);
+            var item = list.FirstOrDefault(i => i.Id == id);
+            if (item is null)
+                throw new KeyNotFoundException($"Item com id {id} não encontrado.");
             return item;
         }
+
 
         public void Update(T entity)
         {

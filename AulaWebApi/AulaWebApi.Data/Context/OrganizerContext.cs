@@ -10,7 +10,7 @@ namespace AulaWebApi.Infra.Context
 {
     public class OrganizerContext : DbContext
     {
-        public OrganizerContext(DbContextOptions<OrganizerContext> options) : base(options) 
+        public OrganizerContext(DbContextOptions<OrganizerContext> options) : base(options)
         {
         }
 

@@ -8,7 +8,7 @@ namespace AulaWebApi.Infra.Repositories
     public class BaseRepository<T> : IRepository<T> where T : BaseModel
     {
         private readonly OrganizerContext _organizerContext;
-       
+
         public BaseRepository(OrganizerContext organizerContext)
         {
             _organizerContext = organizerContext;
@@ -34,7 +34,7 @@ namespace AulaWebApi.Infra.Repositories
         public bool Exists(int id)
         {
             return _organizerContext.Set<T>().Any(e => e.Id == id);
-             
+
         }
 
         public List<T> Read()
@@ -45,8 +45,12 @@ namespace AulaWebApi.Infra.Repositories
 
         public T ReadById(int id)
         {
-           return _organizerContext.Set<T>().FirstOrDefault(e => e.Id == id);
+            var entity = _organizerContext.Set<T>().FirstOrDefault(e => e.Id == id);
+            if (entity is null)
+                throw new KeyNotFoundException($"Entity com id {id} não encontrada.");
+            return entity;
         }
+
 
         public void Update(T entity)
         {

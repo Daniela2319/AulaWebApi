@@ -36,7 +36,7 @@ builder.Services.AddDbContext<OrganizerContext>(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped<IService<Person>, PersonService>();
 builder.Services.AddScoped<IService<User>, UserService>();
-builder.Services.AddScoped<PasswordHasher<string>>();
+builder.Services.AddScoped<PasswordHasher<User>>();
 
 var app = builder.Build();
 

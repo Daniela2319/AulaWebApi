@@ -8,17 +8,17 @@ namespace AulaWebApi.Services
     public class Service<T> : IService<T> where T : BaseModel
     {
         private readonly IRepository<T> _repository;
-       
 
-        public Service(IRepository<T> repository) 
+
+        public Service(IRepository<T> repository)
         {
             _repository = repository;
-            
+
         }
         public virtual int Create(T model)
         {
             return _repository.Create(model);
-            
+
         }
 
         public virtual void Delete(int id)
@@ -39,7 +39,7 @@ namespace AulaWebApi.Services
 
         public virtual List<T> Read()
         {
-           return _repository.Read();
+            return _repository.Read();
         }
 
         public virtual T ReadById(int id)

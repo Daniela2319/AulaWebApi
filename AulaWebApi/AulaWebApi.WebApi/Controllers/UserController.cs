@@ -76,7 +76,7 @@ namespace AulaWebApi.WebApi.Controllers
                 StatusCodeResult result = new StatusCodeResult(204);
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StatusCodeResult result = new StatusCodeResult(500);
                 return result;
