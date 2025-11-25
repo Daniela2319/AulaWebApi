@@ -3,6 +3,7 @@ using AulaWebApi.Infra.Repositories;
 using AulaWebApi.Models;
 using AulaWebApi.Services;
 using AulaWebApi.WebApi.Controllers;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,11 +34,9 @@ builder.Services.AddDbContext<OrganizerContext>(options =>
 });
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-builder.Services.AddScoped(typeof(IService<>), typeof(Service<>));
-
-
-
-
+builder.Services.AddScoped<IService<Person>, PersonService>();
+builder.Services.AddScoped<IService<User>, UserService>();
+builder.Services.AddScoped<PasswordHasher<User>>();
 
 var app = builder.Build();
 

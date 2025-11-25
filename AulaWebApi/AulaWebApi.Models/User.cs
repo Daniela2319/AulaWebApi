@@ -12,5 +12,6 @@ namespace AulaWebApi.Models
         public string Password { get; set; } = string.Empty;
         public int PersonId { get; set; }
         
+        
     }
 }

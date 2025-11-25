@@ -45,8 +45,12 @@ namespace AulaWebApi.Infra.Repositories
 
         public T ReadById(int id)
         {
-           return _organizerContext.Set<T>().FirstOrDefault(e => e.Id == id);
+            var entity = _organizerContext.Set<T>().FirstOrDefault(e => e.Id == id);
+            if (entity is null)
+                throw new KeyNotFoundException($"Entity com id {id} não encontrada.");
+            return entity;
         }
+
 
         public void Update(T entity)
         {

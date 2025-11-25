@@ -27,8 +27,6 @@ namespace AulaWebApi.WebApi.Controllers
                 UserViewModel userViewModel = new UserViewModel();
                 userViewModel.Id = user.Id;
                 userViewModel.Email = user.Email;
-                userViewModel.Password = user.Password;
-                userViewModel.PersonId = user.PersonId;
                 userViewModel.CreatedAt = user.CreatedAt;
                 userViewModel.Person = _personService.ReadById(user.PersonId);
                 listViewModel.Add(userViewModel);
@@ -49,8 +47,6 @@ namespace AulaWebApi.WebApi.Controllers
             UserViewModel userViewModel = new UserViewModel();
             userViewModel.Id = user.Id;
             userViewModel.Email = user.Email;
-            userViewModel.Password = user.Password;
-            userViewModel.PersonId = user.PersonId;
             userViewModel.CreatedAt = user.CreatedAt;
             userViewModel.Person = _personService.ReadById(user.PersonId);
             return userViewModel;
@@ -80,7 +76,7 @@ namespace AulaWebApi.WebApi.Controllers
                 StatusCodeResult result = new StatusCodeResult(204);
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 StatusCodeResult result = new StatusCodeResult(500);
                 return result;
