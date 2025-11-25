@@ -1,3 +1,11 @@
+using AulaWebApi.Infra.Context;
+using AulaWebApi.Infra.Repositories;
+using AulaWebApi.Models;
+using AulaWebApi.Services;
+using AulaWebApi.WebApi.Controllers;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -18,6 +26,17 @@ builder.Services.AddCors(options =>
     });
 });
 
+//Database OrganizerContext
+builder.Services.AddDbContext<OrganizerContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Postgres");
+    options.UseNpgsql(connectionString);
+});
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
+builder.Services.AddScoped<IService<Person>, PersonService>();
+builder.Services.AddScoped<IService<User>, UserService>();
+builder.Services.AddScoped<PasswordHasher<string>>();
 
 var app = builder.Build();
 

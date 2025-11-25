@@ -1,53 +1,11 @@
 ﻿using AulaWebApi.Models;
 using AulaWebApi.Services;
-using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace AulaWebApi.WebApi.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class PersonController : ControllerBase
+    public class PersonController : BaseController<Person>
     {
-        private PersonService _service = new PersonService();
-
-        [HttpGet]
-        public List<Person> Get()
+        public PersonController(IService<Person> service) : base(service)
         {
-            return this._service.Read();
-        }
-
-        
-        [HttpGet("{id}")]
-        public Person Get(int id)
-        {
-            return this._service.ReadById(id);
-        }
-
-        
-        [HttpPost]
-        public void Post([FromBody] Person model)
-        {
-            this._service.Create(model);
-        }
-
-        
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] Person model)
-        {
-            if (id != model.Id)
-            {
-                throw new ArgumentException("O ID do Objeto Person não é igual ao Id da URL.");
-            }
-            this._service.Update(model);
-        }
-
-        
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-            this._service.Delete(id);
         }
     }
 }

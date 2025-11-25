@@ -7,10 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AulaWebApi.Data\AulaWebApi.Infra.csproj" />
     <ProjectReference Include="..\AulaWebApi.Models\AulaWebApi.Models.csproj" />
   </ItemGroup>
 
