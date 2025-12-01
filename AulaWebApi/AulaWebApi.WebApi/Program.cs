@@ -1,42 +1,32 @@
 using AulaWebApi.Infra.Context;
-using AulaWebApi.Infra.Repositories;
-using AulaWebApi.Models;
-using AulaWebApi.Services;
-using AulaWebApi.WebApi.Controllers;
-using Microsoft.AspNetCore.Identity;
+using AulaWebApi.WebApi.Extensions;
 using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontEndLocal",
-    policy =>
-    {
-        policy.WithOrigins("http://127.0.0.1:5500")
-            .AllowAnyMethod()   // permite qualquer método (GET, POST, PUT, DELETE...)
-            .AllowAnyHeader();  // permite qualquer header
-    });
-});
-
-//Database OrganizerContext
+//===== Database =====
 builder.Services.AddDbContext<OrganizerContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("Postgres");
     options.UseNpgsql(connectionString);
 });
 
-builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
-builder.Services.AddScoped<IService<Person>, PersonService>();
-builder.Services.AddScoped<IService<User>, UserService>();
-builder.Services.AddScoped<PasswordHasher<User>>();
+//===== Extensions =====
+builder.Services.AddAppDependencies();
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAuthorization();
+builder.Services.AddSwaggerDocumentation();
+builder.Services.AddCorsPolicy();
+
+
 
 var app = builder.Build();
 
@@ -49,8 +39,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowFrontEndLocal");
+app.UseCorsPolicy();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
